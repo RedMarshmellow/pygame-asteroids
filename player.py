@@ -1,11 +1,17 @@
 from constants import PLAYER_SHOOT_COOLDOWN_SECONDS
 from constants import PLAYER_SHOOT_SPEED
 import pygame
-from constants import SHOT_RADIUS
+from constants import (
+    SHOT_RADIUS,
+    PLAYER_SPEED,
+    PLAYER_RADIUS,
+    LINE_WIDTH,
+    PLAYER_TURN_SPEED,
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+)
 from shot import Shot
-from constants import PLAYER_SPEED
 from circleshape import CircleShape
-from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_TURN_SPEED
 
 
 class Player(CircleShape):
@@ -49,6 +55,8 @@ class Player(CircleShape):
         rotated_vector = unit_vector.rotate(self.rotation)
         rotated_with_speed_vector = rotated_vector * PLAYER_SPEED * dt
         self.position += rotated_with_speed_vector
+        self.position.x %= SCREEN_WIDTH
+        self.position.y %= SCREEN_HEIGHT
 
     def shoot(self):
         if self.shot_cooldown_timer > 0:
