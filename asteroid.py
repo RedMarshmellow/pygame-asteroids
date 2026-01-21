@@ -4,6 +4,7 @@ from constants import ASTEROID_MIN_RADIUS
 from constants import LINE_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT
 import pygame
 from circleshape import CircleShape
+from shockwave import Shockwave
 
 
 class Asteroid(CircleShape):
@@ -19,6 +20,7 @@ class Asteroid(CircleShape):
         self.position.y %= SCREEN_HEIGHT
 
     def split(self):
+        Shockwave(self.position.x, self.position.y, self.radius)
         self.kill()
         if self.radius <= ASTEROID_MIN_RADIUS:
             return

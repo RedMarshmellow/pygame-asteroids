@@ -1,6 +1,7 @@
 from shot import Shot
 import pygame
 from asteroid import Asteroid
+from shockwave import Shockwave
 from constants import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -27,6 +28,7 @@ def main():
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = updatable
     Shot.containers = (shots, updatable, drawable)
+    Shockwave.containers = (updatable, drawable)
     Player.containers = (updatable, drawable)
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
@@ -70,6 +72,9 @@ def main():
                 if asteroid.collides_with(player):
                     if not player.is_invulnerable():
                         log_event("player_hit")
+                        Shockwave(
+                            asteroid.position.x, asteroid.position.y, asteroid.radius
+                        )
                         asteroid.kill()
                         player.respawn()
                         if player.lives <= 0:
