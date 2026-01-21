@@ -1,8 +1,15 @@
 from shot import Shot
 import pygame
-import sys
 from asteroid import Asteroid
-from constants import SCREEN_HEIGHT, SCREEN_WIDTH, SCORE_BASE, FONT
+from constants import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    SCORE_BASE,
+    FONT,
+    SCORE_PER_LIFE,
+    PLAYER_LIVES,
+    PLAYER_INVULNERABILITY_DURATION,
+)
 from logger import log_state, log_event
 from player import Player
 from asteroidfield import AsteroidField
@@ -25,6 +32,8 @@ def main():
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     AsteroidField()
     score = 0
+    last_life_score = 0
+    is_game_over = False
     font_path = "fonts/" + FONT + ".ttf"
     try:
         font = pygame.font.Font(font_path, 24)
@@ -37,25 +46,67 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-        updatable.update(dt)
-        for asteroid in asteroids:
-            if asteroid.collides_with(player):
-                log_event("player_hit")
-                print("Game over!")
-                sys.exit()
-        for asteroid in asteroids:
-            for shot in shots:
-                if shot.collides_with(asteroid):
-                    log_event("asteroid_shot")
-                    shot.kill()
-                    score += SCORE_BASE // asteroid.radius
-                    asteroid.split()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and is_game_over:
+                    score = 0
+                    last_life_score = 0
+                    player.lives = PLAYER_LIVES
+                    player.position = pygame.Vector2(
+                        SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2
+                    )
+                    player.rotation = 0
+                    player.velocity = pygame.Vector2(0, 0)
+                    player.invulnerability_timer = PLAYER_INVULNERABILITY_DURATION
+                    for asteroid in asteroids:
+                        asteroid.kill()
+                    for shot in shots:
+                        shot.kill()
+                    is_game_over = False
+
+        if not is_game_over:
+            updatable.update(dt)
+        if not is_game_over:
+            for asteroid in asteroids:
+                if asteroid.collides_with(player):
+                    if not player.is_invulnerable():
+                        log_event("player_hit")
+                        asteroid.kill()
+                        player.respawn()
+                        if player.lives <= 0:
+                            is_game_over = True
+            for asteroid in asteroids:
+                for shot in shots:
+                    if shot.collides_with(asteroid):
+                        log_event("asteroid_shot")
+                        shot.kill()
+                        score += SCORE_BASE // asteroid.radius
+                        asteroid.split()
+                        while score - last_life_score >= SCORE_PER_LIFE:
+                            player.lives += 1
+                            last_life_score += SCORE_PER_LIFE
         screen.fill("black")
         for obj in drawable:
             obj.draw(screen)
 
         score_text = font.render(f"Score: {score}", True, "yellow")
         screen.blit(score_text, (20, 20))
+
+        lives_text = font.render(f"Lives: {player.lives}", True, "red")
+        screen.blit(lives_text, (SCREEN_WIDTH - 250, 20))
+
+        if is_game_over:
+            game_over_text = font.render("GAME OVER", True, "white")
+            restart_text = font.render("Press R to Restart", True, "white")
+
+            go_rect = game_over_text.get_rect(
+                center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 20)
+            )
+            re_rect = restart_text.get_rect(
+                center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+            )
+
+            screen.blit(game_over_text, go_rect)
+            screen.blit(restart_text, re_rect)
 
         pygame.display.flip()
         dt = clock.tick(60) / 1000
