@@ -7,8 +7,6 @@ from constants import (
     PLAYER_RADIUS,
     LINE_WIDTH,
     PLAYER_TURN_SPEED,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
     PLAYER_INVULNERABILITY_DURATION,
     PLAYER_LIVES,
 )
@@ -64,8 +62,9 @@ class Player(CircleShape):
         rotated_vector = unit_vector.rotate(self.rotation)
         rotated_with_speed_vector = rotated_vector * PLAYER_SPEED * dt
         self.position += rotated_with_speed_vector
-        self.position.x %= SCREEN_WIDTH
-        self.position.y %= SCREEN_HEIGHT
+        w, h = pygame.display.get_surface().get_size()
+        self.position.x %= w
+        self.position.y %= h
 
     def shoot(self):
         if self.shot_cooldown_timer > 0:
